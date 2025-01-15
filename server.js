@@ -1,64 +1,38 @@
+// Carregar as variáveis de ambiente a partir do arquivo .env
 require('dotenv').config();
-const express = require('express');
+
+// Importar o Mongoose
 const mongoose = require('mongoose');
-const cors = require('cors');
-const Profit = require('./models/profitModel');
 
+// Exibir a variável MONGODB_URI para verificar se está sendo lida corretamente
+console.log('MONGODB_URI:', process.env.MONGODB_URI);
+
+// Configuração do Express (caso você esteja utilizando Express)
+const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 
-app.use(cors());
+// Middleware para permitir o uso de JSON no corpo das requisições
 app.use(express.json());
 
-console.log('MONGODB_URI:', process.env.MONGODB_URI);  // Adicione essa linha para verificar
-
-// Conectar ao MongoDB
-mongoose.connect(process.env.MONGO_URI, {
+// Conectar ao MongoDB usando a variável de ambiente MONGODB_URI
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('Conectado ao MongoDB'))
-.catch((err) => console.log('Erro na conexão com o MongoDB:', err));
-
-// Rota para salvar o lucro
-app.post('/api/saveProfit', async (req, res) => {
-  const { planId, profit, startTime } = req.body;
-
-  try {
-    const existingProfit = await Profit.findOne({ planId });
-
-    if (existingProfit) {
-      existingProfit.profit = profit;
-      existingProfit.startTime = startTime;
-      await existingProfit.save();
-    } else {
-      const newProfit = new Profit({ planId, profit, startTime });
-      await newProfit.save();
-    }
-
-    res.status(200).json({ message: 'Lucro salvo com sucesso' });
-  } catch (err) {
-    res.status(500).json({ message: 'Erro ao salvar lucro', error: err });
-  }
+.then(() => {
+  console.log('Conectado ao MongoDB');
+})
+.catch((err) => {
+  console.error('Erro na conexão com o MongoDB:', err);
 });
 
-// Rota para obter o lucro
-app.get('/api/getProfit', async (req, res) => {
-  const { planId } = req.query;
-
-  try {
-    const profitData = await Profit.findOne({ planId });
-
-    if (profitData) {
-      res.status(200).json({ profit: profitData.profit });
-    } else {
-      res.status(404).json({ profit: 0 });
-    }
-  } catch (err) {
-    res.status(500).json({ message: 'Erro ao obter lucro', error: err });
-  }
+// Rota de exemplo
+app.get('/', (req, res) => {
+  res.send('Backend funcionando!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+// Iniciar o servidor
+app.listen(port, () => {
+  console.log(`Servidor rodando na porta ${port}`);
 });
