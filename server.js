@@ -1,44 +1,82 @@
+// Importa as dependências
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');  // Importar o CORS
-const Profit = require('./models/profitModel');  // Importar o modelo de lucro
-const app = express();
-const port = process.env.PORT || 3000;
+require('dotenv').config();  // Carrega as variáveis do arquivo .env
 
-// Usar CORS
-app.use(cors());  // Habilitar o CORS para permitir requisições externas
-app.use(express.json());  // Middleware para permitir o uso de JSON no corpo das requisições
+// Configuração do app Express
+const app = express();
+const port = process.env.PORT || 5000;
+
+// Middleware para lidar com JSON
+app.use(express.json());
 
 // Conectar ao MongoDB
-mongoose.connect(process.env.MONGODB_URI)
+const mongoURI = process.env.MONGODB_URI;
+
+if (!mongoURI) {
+  console.error("MONGODB_URI não está definida");
+  process.exit(1);  // Encerra o processo se a URI não estiver definida
+}
+
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
-    console.log('Conectado ao MongoDB');
+    console.log("Conectado ao MongoDB com sucesso!");
   })
-  .catch((err) => {
-    console.error('Erro na conexão com o MongoDB:', err);
+  .catch(err => {
+    console.error("Erro na conexão com o MongoDB:", err);
   });
 
-// Rota para atualizar o lucro
-app.post('/update-profit', async (req, res) => {
-  const { userId, planId, profitAmount } = req.body;
+// Importar o modelo do Profit
+const Profit = require('./models/profitModel');
 
-  // Criar um novo documento de lucro
-  const newProfit = new Profit({
-    userId,
-    planId,
-    profitAmount
-  });
-
+// Rota para salvar o lucro
+app.post('/api/saveProfit', async (req, res) => {
   try {
-    // Salvar no MongoDB
-    await newProfit.save();
-    res.status(200).json({ message: 'Lucro salvo com sucesso' });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao salvar lucro no MongoDB' });
+    const { planId, profit, startTime } = req.body;
+
+    // Cria ou atualiza o lucro no banco de dados
+    const existingProfit = await Profit.findOne({ planId });
+
+    if (existingProfit) {
+      existingProfit.profit = profit;
+      existingProfit.startTime = startTime;
+      await existingProfit.save();
+    } else {
+      const newProfit = new Profit({
+        planId,
+        profit,
+        startTime,
+      });
+      await newProfit.save();
+    }
+
+    res.status(200).json({ message: 'Lucro salvo com sucesso!' });
+  } catch (error) {
+    console.error("Erro ao salvar o lucro:", error);
+    res.status(500).json({ error: 'Erro ao salvar os dados no servidor' });
   }
 });
 
-// Iniciar o servidor
+// Rota para obter o lucro
+app.get('/api/getProfit', async (req, res) => {
+  try {
+    const { planId } = req.query;
+
+    // Busca o lucro do banco de dados
+    const profit = await Profit.findOne({ planId });
+
+    if (!profit) {
+      return res.status(404).json({ message: 'Lucro não encontrado' });
+    }
+
+    res.status(200).json({ profit: profit.profit });
+  } catch (error) {
+    console.error("Erro ao obter o lucro:", error);
+    res.status(500).json({ error: 'Erro ao buscar os dados no servidor' });
+  }
+});
+
+// Inicia o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
