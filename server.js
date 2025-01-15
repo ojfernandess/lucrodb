@@ -1,24 +1,16 @@
-// Carregar as variáveis de ambiente a partir do arquivo .env
-require('dotenv').config();
+require('dotenv').config();  // Carregar as variáveis de ambiente
 
-// Importar o Mongoose
 const mongoose = require('mongoose');
-
-// Exibir a variável MONGODB_URI para verificar se está sendo lida corretamente
-console.log('MONGODB_URI:', process.env.MONGODB_URI);
-
-// Configuração do Express (caso você esteja utilizando Express)
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware para permitir o uso de JSON no corpo das requisições
-app.use(express.json());
+// Exibir a variável MONGODB_URI para verificar se está sendo lida corretamente
+console.log('MONGODB_URI:', process.env.MONGODB_URI);
 
 // Conectar ao MongoDB usando a variável de ambiente MONGODB_URI
 mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true // Apenas mantenha esta opção
 })
 .then(() => {
   console.log('Conectado ao MongoDB');
