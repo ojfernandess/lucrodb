@@ -1,11 +1,9 @@
 const mongoose = require('mongoose');
 
 const profitSchema = new mongoose.Schema({
-  planId: { type: String, required: true, unique: true },
-  profit: { type: Number, required: true },
-  startTime: { type: Number, required: true }
+    planId: { type: String, required: true, unique: true },
+    profit: { type: Number, default: 0 },
+    startTime: { type: Number, default: Date.now },
 });
 
-const Profit = mongoose.model('Profit', profitSchema);
-
-module.exports = Profit;
+module.exports = mongoose.model('Profit', profitSchema);
