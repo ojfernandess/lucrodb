@@ -1,7 +1,7 @@
 require('dotenv').config();  // Carregar variáveis de ambiente
 const mongoose = require('mongoose');
 const express = require('express');
-const Profit = require('./profitModel');  // Importar o modelo de lucros
+const Profit = require('./models/profitModel');  // Importar o modelo de lucros
 const app = express();
 const port = process.env.PORT || 3000;
 
