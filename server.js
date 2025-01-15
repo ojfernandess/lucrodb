@@ -38,24 +38,19 @@ const profitSchema = new mongoose.Schema({
 
 const Profit = mongoose.model('Profit', profitSchema);
 
-// Rota para salvar ou atualizar o lucro
+/// Rota para salvar ou atualizar o lucro
 app.post('/api/saveProfit', async (req, res) => {
   try {
     const { planId, profit, startTime } = req.body;
 
-    // Verifica se o documento já existe e atualiza ou cria um novo
-    const existingProfit = await Profit.findOne({ planId });
+    // Atualiza ou insere um novo documento
+    const result = await Profit.findOneAndUpdate(
+      { planId }, // Condição para encontrar o documento
+      { profit, startTime }, // Campos a serem atualizados
+      { upsert: true, new: true } // Insere se não encontrar (upsert), retorna o documento atualizado (new: true)
+    );
 
-    if (existingProfit) {
-      existingProfit.profit = profit;
-      existingProfit.startTime = startTime;
-      await existingProfit.save();
-    } else {
-      const newProfit = new Profit({ planId, profit, startTime });
-      await newProfit.save();
-    }
-
-    res.status(200).json({ message: 'Lucro salvo com sucesso!' });
+    res.status(200).json({ message: 'Lucro salvo com sucesso!', data: result });
   } catch (error) {
     console.error("Erro ao salvar o lucro:", error);
     res.status(500).json({ error: 'Erro ao salvar os dados no servidor' });
