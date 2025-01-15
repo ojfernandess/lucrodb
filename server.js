@@ -24,6 +24,7 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   })
   .catch(err => {
     console.error("Erro na conexão com o MongoDB:", err);
+    process.exit(1);  // Encerra o processo se a conexão falhar
   });
 
 // Importar o modelo do Profit
@@ -33,6 +34,10 @@ const Profit = require('./models/profitModel');
 app.post('/api/saveProfit', async (req, res) => {
   try {
     const { planId, profit, startTime } = req.body;
+
+    if (!planId || profit === undefined || startTime === undefined) {
+      return res.status(400).json({ error: 'Parâmetros inválidos. Todos os campos são obrigatórios.' });
+    }
 
     // Cria ou atualiza o lucro no banco de dados
     const existingProfit = await Profit.findOne({ planId });
@@ -61,6 +66,10 @@ app.post('/api/saveProfit', async (req, res) => {
 app.get('/api/getProfit', async (req, res) => {
   try {
     const { planId } = req.query;
+
+    if (!planId) {
+      return res.status(400).json({ error: 'Parâmetro planId é obrigatório' });
+    }
 
     // Busca o lucro do banco de dados
     const profit = await Profit.findOne({ planId });
