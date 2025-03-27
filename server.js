@@ -21,7 +21,7 @@ if (!mongoURI) {
 }
 
 mongoose
-  .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(mongoURI) // Remover as opções deprecated
   .then(() => {
     console.log("Conectado ao MongoDB com sucesso!");
   })
