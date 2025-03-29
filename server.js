@@ -42,18 +42,27 @@ app.post('/api/saveProfit', async (req, res) => {
   try {
     const { planId, profit, startTime } = req.body;
     
+    // Log detalhado para depuração
+    console.log("Recebido pedido para salvar:", { planId, profit, startTime });
+    
     // Verificar se os dados necessários estão presentes
     if (!planId) {
+      console.error("planId ausente na requisição");
       return res.status(400).json({ error: 'planId é obrigatório' });
     }
+    
+    // Convertendo valores para garantir tipos corretos
+    const profitValue = parseFloat(profit) || 0;
+    const startTimeValue = parseInt(startTime) || Date.now();
     
     // Atualiza ou insere um novo documento
     const result = await Profit.findOneAndUpdate(
       { planId }, // Condição para encontrar o documento
-      { profit, startTime }, // Campos a serem atualizados
+      { profit: profitValue, startTime: startTimeValue }, // Campos a serem atualizados
       { upsert: true, new: true } // Insere se não encontrar (upsert), retorna o documento atualizado (new: true)
     );
     
+    console.log("Lucro salvo com sucesso:", result);
     res.status(200).json({ message: 'Lucro salvo com sucesso!', data: result });
   } catch (error) {
     console.error("Erro ao salvar o lucro:", error);
