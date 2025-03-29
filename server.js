@@ -14,14 +14,13 @@ app.use(cors());
 
 // Conectar ao MongoDB
 const mongoURI = process.env.MONGODB_URI;
-
 if (!mongoURI) {
   console.error("MONGODB_URI não está definida");
   process.exit(1); // Encerra o processo se a URI não estiver definida
 }
 
 mongoose
-  .connect(mongoURI) // Remover as opções deprecated
+  .connect(mongoURI)
   .then(() => {
     console.log("Conectado ao MongoDB com sucesso!");
   })
@@ -38,18 +37,23 @@ const profitSchema = new mongoose.Schema({
 
 const Profit = mongoose.model('Profit', profitSchema);
 
-/// Rota para salvar ou atualizar o lucro
+// Rota para salvar ou atualizar o lucro
 app.post('/api/saveProfit', async (req, res) => {
   try {
     const { planId, profit, startTime } = req.body;
-
+    
+    // Verificar se os dados necessários estão presentes
+    if (!planId) {
+      return res.status(400).json({ error: 'planId é obrigatório' });
+    }
+    
     // Atualiza ou insere um novo documento
     const result = await Profit.findOneAndUpdate(
       { planId }, // Condição para encontrar o documento
       { profit, startTime }, // Campos a serem atualizados
       { upsert: true, new: true } // Insere se não encontrar (upsert), retorna o documento atualizado (new: true)
     );
-
+    
     res.status(200).json({ message: 'Lucro salvo com sucesso!', data: result });
   } catch (error) {
     console.error("Erro ao salvar o lucro:", error);
@@ -61,14 +65,18 @@ app.post('/api/saveProfit', async (req, res) => {
 app.get('/api/getProfit', async (req, res) => {
   try {
     const { planId } = req.query;
-
+    
+    if (!planId) {
+      return res.status(400).json({ error: 'planId é obrigatório' });
+    }
+    
     // Busca o lucro pelo planId
     const profit = await Profit.findOne({ planId });
-
+    
     if (!profit) {
-      return res.status(404).json({ message: 'Lucro não encontrado' });
+      return res.status(404).json({ message: 'Lucro não encontrado para este planId' });
     }
-
+    
     res.status(200).json({ profit: profit.profit, startTime: profit.startTime });
   } catch (error) {
     console.error("Erro ao obter o lucro:", error);
